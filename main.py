@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-# import colors
+import colors
 
 def main():
     # Proyecto de visión artificial
@@ -9,6 +9,7 @@ def main():
     db = "./DB"
     valid = ['.jpg', '.jpeg', '.png']
     img_list = []
+    grain = colors.grain()
     
     if os.path.exists(db):
         img_list = os.listdir(db)
