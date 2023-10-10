@@ -9,4 +9,3 @@ class grain:
     SM1 = cs.cspace_convert([35.4, 13.7, -0.3], start={"name": "CIELab"}, end={"name": "sRGB1"}) ##SOBREMADURADO
     SM2 = cs.cspace_convert([28.8, 8.6, -0.9], start={"name": "CIELab"}, end={"name": "sRGB1"}) ##SOBREMADURADO
     DRY = cs.cspace_convert([15.9, 1.9, 0.7], start={"name": "CIELab"}, end={"name": "sRGB1"}) ##SECO
-    
