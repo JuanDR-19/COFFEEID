@@ -6,6 +6,7 @@ import colors
 def main():
     # Proyecto de visión artificial
     print('Identificación de granos de café maduros')
+    color_black = (255, 255, 255)
     db = "./DB"
     valid = ['.jpg', '.jpeg', '.png']
     img_list = []
@@ -26,8 +27,7 @@ def main():
                     kernel = np.ones((5, 5), np.uint8)
                     dilated_edges = cv2.dilate(edges, kernel, iterations=1)
                     contours, _ = cv2.findContours(dilated_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                    cv2.drawContours(img, contours, -1, (0, 255, 0), 2)
-                    
+                    cv2.drawContours(img, contours, -1, color_black, 2)
                     # Guardar la imagen con los contornos
                     output_path = os.path.join(db, "contours_" + ph)
                     cv2.imwrite(output_path, img)
