@@ -27,6 +27,17 @@ def main():
         exit(1)
         
     grain_color = colors()
+    if img is not None:
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        blurred_img = cv2.GaussianBlur(gray_img, (5, 5), 0)
+        edges = cv2.Canny(blurred_img, 50, 150)
+        kernel = np.ones((5, 5), np.uint8)
+        dilated_edges = cv2.dilate(edges, kernel, iterations=1)
+        contours, _ = cv2.findContours(dilated_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(img, contours, -1, (0, 255, 0), 2)
+        cv2.imshow("Imagen con contornos", img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
     
     
 
