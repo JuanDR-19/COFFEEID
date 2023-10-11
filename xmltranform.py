@@ -2,7 +2,8 @@ import xml.etree.ElementTree as ET
 
 xml_file = "./P_DB/training.xml"
 __folder_path__ = './DB/'  # Dirección estática del folder donde se guardan las imágenes
-_extension__ = '.jpeg'  # Extensión admitida para las imágenes de entrenamiento
+__extension__ = '.jpeg'  # Extensión admitida para las imágenes de entrenamiento
+__folder__ = 'P_DB'
 
 tree = ET.parse(xml_file)
 root = tree.getroot()
@@ -30,7 +31,7 @@ for object_elem in root.findall(".//object"):
     labels.append(label)
 
 # Definir el nombre del archivo de salida
-output_txt_file = 'datos_entrenamiento.txt'
+output_txt_file = f'{__folder__}datos_entrenamiento.txt'
 
 # Abrir el archivo en modo escritura
 with open(output_txt_file, 'w') as file:
