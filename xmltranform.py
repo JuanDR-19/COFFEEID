@@ -31,7 +31,7 @@ with open(output_txt_file, 'w') as file:
     for i, (xmin, ymin, xmax, ymax) in enumerate(coordinates):
         label = labels[i]
         # Escribir los datos en el archivo de texto
-        line = f"{filename} 1 {xmin} {ymin} {xmax} {ymax}\n"
+        line = f"1 {xmin} {ymin} {xmax} {ymax}\n"
         file.write(line)
 
 print(f'Datos de entrenamiento escritos en {output_txt_file}')
