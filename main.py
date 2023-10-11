@@ -25,7 +25,6 @@ def main():
                 if img is not None:
                     #sqdiff(img,template,h,w) 
                     print('Iniciando proceso de deteccion de imagenes')  
-                    #TODO: cargar el doc .txt para las ubicaciones de los elementos dentro de las imagenes
                     #TODO: buscar metodo de opencv que haga esa busqueda y seleccion mediante un archivo .txt
                             
     else:

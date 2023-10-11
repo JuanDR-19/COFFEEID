@@ -1,9 +1,9 @@
 import xml.etree.ElementTree as ET
 
-xml_file = "./P_DB/training.xml"
+xml_file = "./DB/training.xml"
 __folder_path__ = './DB/'  # Dirección estática del folder donde se guardan las imágenes
 __extension__ = '.jpeg'  # Extensión admitida para las imágenes de entrenamiento
-__folder__ = 'P_DB'
+__folder__ = 'DB'
 
 tree = ET.parse(xml_file)
 root = tree.getroot()
