@@ -10,15 +10,8 @@ root = tree.getroot()
 coordinates = []
 labels = []
 
-# Buscar el elemento "filename" en el nivel superior del XML
-filename_elem = root.find(".//filename")
-
-if filename_elem is not None:
-    filename = f"{__folder_path__}{filename_elem.text}{_extension__}"
-
 for object_elem in root.findall(".//object"):
     label = object_elem.find("name").text
-
     # Obtener coordenadas de la región de interés (ROI)
     bbox = object_elem.find("bndbox")
     xmin = int(float(bbox.find("xmin").text))
@@ -31,7 +24,7 @@ for object_elem in root.findall(".//object"):
     labels.append(label)
 
 # Definir el nombre del archivo de salida
-output_txt_file = f'{__folder__}datos_entrenamiento.txt'
+output_txt_file = f'{__folder__}/datos_entrenamiento.txt'
 
 # Abrir el archivo en modo escritura
 with open(output_txt_file, 'w') as file:
