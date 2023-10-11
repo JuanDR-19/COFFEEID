@@ -28,11 +28,15 @@ output_txt_file = 'datos_entrenamiento.txt'
 with open(output_txt_file, 'w') as file:
     for i, (xmin, ymin, xmax, ymax) in enumerate(coordinates):
         label = labels[i]
-        filename = f"{__folder_path__}{labels[i]}{filename}{_extension__}"
-        # Escribir los datos en el archivo de texto
-        line = f"{filename} 1 {xmin} {ymin} {xmax} {ymax}\n"
-        file.write(line)
+        # Buscar el elemento "filename" en el nivel superior del XML
+        filename_elem = root.find(".//filename")
+        if filename_elem is not None:
+            filename = f"{__folder_path__}{filename_elem.text}{_extension__}"
+            # Escribir los datos en el archivo de texto
+            line = f"{filename} 1 {xmin} {ymin} {xmax} {ymax}\n"
+            file.write(line)
 
 print(f'Datos de entrenamiento escritos en {output_txt_file}')
+
 
     
