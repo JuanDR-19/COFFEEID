@@ -1,103 +1,72 @@
 import cv2
-import os
 import numpy as np
+import os
+import colors
+from matplotlib import pyplot as plt
 
-def load_pos(train_file):
-    annotations = []
-    with open(train_file, 'r') as file:
-        for line in file:
-            parts = line.strip().split(' ')
-            if len(parts) >= 6:
-                image_path = parts[0]
-                x_min = int(parts[2])
-                y_min = int(parts[3])
-                x_max = int(parts[4])
-                y_max = int(parts[5])
-                annotations.append((image_path, x_min, y_min, x_max, y_max))
-    return annotations
 
-def create_ps( annotations):
-    samples = []
-    for annotation in annotations:
-        image_path, x_min, y_min, x_max, y_max = annotation
-        image = cv2.imread(os.path.join(image_path), cv2.IMREAD_GRAYSCALE)
-        if image is not None:
-            roi = image[y_min:y_max, x_min:x_max]
-            samples.append(roi)
-    return samples
-
-def train(positive_samples, negative_images_dir, model_filename):
-    # Leer imágenes negativas
-    negative_images = [os.path.join(negative_images_dir, img) for img in os.listdir(negative_images_dir)]
-
-    # Crear listas para almacenar las rutas de las imágenes y etiquetas
-    images = positive_samples
-    labels = [1] * len(positive_samples)  # Etiqueta 1 para imágenes positivas
-
-    # Agregar imágenes negativas a las listas
-    for image_path in negative_images:
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        if image is not None:
-            # Escalar la imagen al rango [0, 1] y convertirla a CV_32F
-            image = cv2.normalize(image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX, cv2.CV_32F)
-            images.append(image)
-            labels.append(0)  # Etiqueta 0 para imágenes negativas
-
-    # Crear un detector HOG
-    hog = cv2.HOGDescriptor()
-    svm = cv2.ml.SVM_create()
-
-    # Entrenar el detector
-    samples = np.array(images, dtype=np.float32)  # Cambiar el tipo de dato a CV_32F
-    responses = np.array(labels, dtype=np.int32)  # Mantener las etiquetas como CV_32S
-    svm.setType(cv2.ml.SVM_C_SVC)
-    svm.setKernel(cv2.ml.SVM_LINEAR)
-    svm.setTermCriteria((cv2.TERM_CRITERIA_MAX_ITER, 100, 1e-6))
-    samples = samples.reshape(-1, np.prod(samples.shape[1:])) 
-    svm.train(samples, cv2.ml.ROW_SAMPLE, responses)
-    svm.save(model_filename)
-
-def resize_images(input_dir, output_dir, target_size):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    valid_extensions = ['.jpg', '.jpeg', '.png']  # Extensiones válidas de imágenes
+def contorno(img):
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred_img = cv2.GaussianBlur(gray_img, (5, 5), 0)
+    edges = cv2.Canny(blurred_img, 50, 150)
+    kernel = np.ones((5, 5), np.uint8)
+    dilated_edges = cv2.dilate(edges, kernel, iterations=1)
+    contours, _ = cv2.findContours(dilated_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(img, contours, -1, (0,0,255), 2)
+    cv2.imshow("Imagen con contornos", img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     
-    for filename in os.listdir(input_dir):
-        if any(filename.lower().endswith(ext) for ext in valid_extensions):
-            input_path = os.path.join(input_dir, filename)
-            output_path = os.path.join(output_dir, filename)
-            # Cargar la imagen
-            image = cv2.imread(input_path)
-            
-            if image is not None:
-                # Redimensionar la imagen al tamaño deseado
-                resized_image = cv2.resize(image, target_size)  # target_size debe ser una tupla (width, height)
-                # Guardar la imagen redimensionada
-                cv2.imwrite(output_path, resized_image)
-                print(f"Imagen redimensionada y guardada: {output_path}")
+
+def sqdiff(img, template, h, w):
+    img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    res = cv2.matchTemplate(img_grey, template, cv2.TM_SQDIFF)
+    plt.imshow(res, cmap='gray')
+    plt.title('Resultado de la coincidencia')
+    plt.show()
+    identify(h,w,res,img_grey)
+    
+    
+
+def identify(h, w, res, img_grey):
+    # Señalar los granos seleccionados
+    min_v, max_v, min_loc, max_loc = cv2.minMaxLoc(res) #encontrar los valores mínimo y máximo y sus ubicaciones en la matriz res
+    # min_loc se utiliza para identificar la ubicación del punto donde se encontró la mejor coincidencia.
+    top_left = min_loc #top_left es la esquina superior izquierda del rectángulo que se utilizará para señalar la ubicación del grano de café identificado.
+    bottom_right = (top_left[0] + w, top_left[1] + h)
+    img_with_rectangle = img_grey.copy()
+    cv2.rectangle(img_with_rectangle, top_left, bottom_right, 255, 2)
+    cv2.imshow('Imagen con Rectángulo', img_with_rectangle)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+                    
 
 def main():
-    
+    # Proyecto de visión artificial
     print('Identificación de granos de café maduros')
-    # Directorios para imágenes positivas y negativas
-    positive_images_dir = "./DB"
-    negative_images_dir = "./N_DB"
-    # Ruta al archivo de anotaciones
-    ent_file = "./DB/datos_entrenamiento.txt"
-
-    if not os.path.isfile(ent_file):
-        print(f"El archivo de anotaciones '{ent_file}' no se encontró. Asegúrate de que esté en la misma ubicación que tus imágenes positivas.")
-        return
-
-    annotations = load_pos(ent_file)
-    positive_samples = create_ps(annotations)
-    negative_resized_dir = "./N_DB_resized"
-    target_size = (64, 64)
-    resize_images(negative_images_dir, negative_resized_dir, target_size)
-    model_filename = "detector.yml"
-    if not os.path.isfile(model_filename):
-        train(positive_samples, negative_resized_dir, model_filename)
-        print(f"Modelo entrenado y guardado en {model_filename}")
-
+    color_white = (255, 255, 255)
+    template = cv2.imread('./knowledge/template.jpeg', cv2.IMREAD_GRAYSCALE)  # Cargar la plantilla como imagen en escala de grises
+    h, w = template.shape[:2]
+    db = "./DB"
+    valid = ['.jpg', '.jpeg', '.png']
+    img_list = []
+    grain = colors.grain()
+    
+    if os.path.exists(db):
+        img_list = os.listdir(db)
+        
+        for ph in img_list:
+            print('analizando imagen')
+            if any(ph.endswith(extension) for extension in valid):
+                route = os.path.join(db, ph)
+                img = cv2.imread(route)
+                if img is not None:
+                    sqdiff(img,template,h,w)   
+                    
+    else:
+        print("El directorio de imágenes no existe.")
+        exit(1)
+    
 if __name__ == '__main__':
     main()
