@@ -2,9 +2,9 @@ import cv2
 import os
 import numpy as np
 
-def load_annotations(annotations_file):
+def load_pos(train_file):
     annotations = []
-    with open(annotations_file, 'r') as file:
+    with open(train_file, 'r') as file:
         for line in file:
             parts = line.strip().split(' ')
             if len(parts) >= 6:
@@ -16,7 +16,7 @@ def load_annotations(annotations_file):
                 annotations.append((image_path, x_min, y_min, x_max, y_max))
     return annotations
 
-def create_positive_samples( annotations):
+def create_ps( annotations):
     samples = []
     for annotation in annotations:
         image_path, x_min, y_min, x_max, y_max = annotation
@@ -26,7 +26,7 @@ def create_positive_samples( annotations):
             samples.append(roi)
     return samples
 
-def train_detector(positive_samples, negative_images_dir, model_filename):
+def train(positive_samples, negative_images_dir, model_filename):
     # Leer imágenes negativas
     negative_images = [os.path.join(negative_images_dir, img) for img in os.listdir(negative_images_dir)]
 
@@ -53,11 +53,11 @@ def train_detector(positive_samples, negative_images_dir, model_filename):
     svm.setType(cv2.ml.SVM_C_SVC)
     svm.setKernel(cv2.ml.SVM_LINEAR)
     svm.setTermCriteria((cv2.TERM_CRITERIA_MAX_ITER, 100, 1e-6))
-    samples = samples.reshape(-1, np.prod(samples.shape[1:]))  # Añadir esta línea
+    samples = samples.reshape(-1, np.prod(samples.shape[1:])) 
     svm.train(samples, cv2.ml.ROW_SAMPLE, responses)
     svm.save(model_filename)
 
-def resize_images_in_directory(input_dir, output_dir, target_size):
+def resize_images(input_dir, output_dir, target_size):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     valid_extensions = ['.jpg', '.jpeg', '.png']  # Extensiones válidas de imágenes
@@ -83,20 +83,20 @@ def main():
     positive_images_dir = "./DB"
     negative_images_dir = "./N_DB"
     # Ruta al archivo de anotaciones
-    annotations_file = "./DB/datos_entrenamiento.txt"
+    ent_file = "./DB/datos_entrenamiento.txt"
 
-    if not os.path.isfile(annotations_file):
-        print(f"El archivo de anotaciones '{annotations_file}' no se encontró. Asegúrate de que esté en la misma ubicación que tus imágenes positivas.")
+    if not os.path.isfile(ent_file):
+        print(f"El archivo de anotaciones '{ent_file}' no se encontró. Asegúrate de que esté en la misma ubicación que tus imágenes positivas.")
         return
 
-    annotations = load_annotations(annotations_file)
-    positive_samples = create_positive_samples(annotations)
+    annotations = load_pos(ent_file)
+    positive_samples = create_ps(annotations)
     negative_resized_dir = "./N_DB_resized"
     target_size = (64, 64)
-    resize_images_in_directory(negative_images_dir, negative_resized_dir, target_size)
+    resize_images(negative_images_dir, negative_resized_dir, target_size)
     model_filename = "detector.yml"
     if not os.path.isfile(model_filename):
-        train_detector(positive_samples, negative_resized_dir, model_filename)
+        train(positive_samples, negative_resized_dir, model_filename)
         print(f"Modelo entrenado y guardado en {model_filename}")
 
 if __name__ == '__main__':
