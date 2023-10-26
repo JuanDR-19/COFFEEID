@@ -1,53 +1,19 @@
 import cv2
 import os
-
-
-def segment(image):
-    if image is None:
-        print("No se puede cargar la imagen")
-        return
-
-    if image.shape[2] == 3:
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        hue = hsv[:, :, 0]
-        # Calcular el histograma de color en el componente Hue
-        hist = cv2.calcHist([hue], [0], None, [180], [0, 180])
-        cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX)
-        # Aplicar la retroproyección usando el histograma de color
-        backproj = cv2.calcBackProject([hue], [0], hist, [0, 180], scale=1)
-        # Aplicar la detección de bordes usando derivadas de Sobel
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        grad_x = cv2.Sobel(gray, cv2.CV_16S, 1, 0, ksize=3)
-        grad_y = cv2.Sobel(gray, cv2.CV_16S, 0, 1, ksize=3)
-        abs_grad_x = cv2.convertScaleAbs(grad_x)
-        abs_grad_y = cv2.convertScaleAbs(grad_y)
-        edges = cv2.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
-        # Combinar la retroproyección y la detección de bordes
-        combined = cv2.bitwise_and(backproj, edges)
-        cv2.imshow("imagen combinada", combined)
-        cv2.waitKey()
-
-    elif image.shape[2] == 1:  # Grayscale image
-        # Handle grayscale images as needed
-        print("Input image is grayscale. Handle it accordingly.")
-
-    else:
-        print(
-            "Unsupported image format. It should be either 1-channel (grayscale) or 3-channel (BGR)."
-        )
-
+import numpy as np
 
 def main():
     print("Identificación de granos de café maduros")
-    print(
-        "Se hará uso de la metodología watershed para identificar los granos de café dentro del cafeto"
-    )
+    print("Se hará uso de la metodología watershed para identificar los granos de café dentro del cafeto")
     target_size = (750, 800)  # Tamaño deseado para las imágenes
-
     # Directorio con las imágenes originales
     db = "./DB"
     valid = [".jpg", ".jpeg", ".png"]
     img_list = []
+    redBajo1 = np.array([0, 100, 20], np.uint8)
+    redAlto1 = np.array([8, 255, 255], np.uint8)
+    redBajo2 = np.array([175, 100, 20], np.uint8)
+    redAlto2 = np.array([179, 255, 255], np.uint8)
 
     if os.path.exists(db):
         img_list = [
@@ -57,14 +23,16 @@ def main():
         ]
 
     for img in img_list:
-        assert (
-            img is not None
-        ), "El archivo de imagen no pudo ser leído, verificar que existe y que está guardado correctamente"
-        image_w = cv2.imread(
-            img, cv2.IMREAD_COLOR
-        )  # Leer la imagen en formato BGR (3 channels)
+        assert (img is not None), "El archivo de imagen no pudo ser leído, verificar que existe y que está guardado correctamente"
+        image_w = cv2.imread(img, cv2.IMREAD_COLOR)  # Leer la imagen en formato BGR (3 channels)
         image_w = cv2.resize(image_w, target_size)
-        segment(image_w)
+        image_w = cv2.cvtColor(image_w, cv2.COLOR_BGR2HSV) 
+        maskRed1 = cv2.inRange(image_w, redBajo1, redAlto1)
+        maskRed2 = cv2.inRange(image_w, redBajo2, redAlto2)
+        maskRed = cv2.add(maskRed1, maskRed2)
+        maskRedvis = cv2.bitwise_and(image_w, image_w, mask= maskRed)
+        cv2.imshow('frame', maskRedvis)
+        cv2.waitKey()
 
 
 if __name__ == "__main__":
