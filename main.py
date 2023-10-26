@@ -25,13 +25,13 @@ def main():
     for img in img_list:
         assert (img is not None), "El archivo de imagen no pudo ser leído, verificar que existe y que está guardado correctamente"
         image_w = cv2.imread(img, cv2.IMREAD_COLOR)  # Leer la imagen en formato BGR (3 channels)
-        image_w = cv2.resize(image_w, target_size)
-        image_w = cv2.cvtColor(image_w, cv2.COLOR_BGR2HSV) 
-        maskRed1 = cv2.inRange(image_w, redBajo1, redAlto1)
-        maskRed2 = cv2.inRange(image_w, redBajo2, redAlto2)
-        maskRed = cv2.add(maskRed1, maskRed2)
-        maskRedvis = cv2.bitwise_and(image_w, image_w, mask= maskRed)
-        cv2.imshow('frame', maskRedvis)
+        image_w = cv2.resize(image_w, target_size) # cambiar el tamaño de las imagnes para dar estandar
+        image_w = cv2.cvtColor(image_w, cv2.COLOR_BGR2HSV)  # cambiar el color a escala hsv
+        maskRed1 = cv2.inRange(image_w, redBajo1, redAlto1) # aplicar las mascaras
+        maskRed2 = cv2.inRange(image_w, redBajo2, redAlto2) # aplicar las segundas mascaras
+        maskRed = cv2.add(maskRed1, maskRed2) #combinar mascaras
+        maskRedvis = cv2.bitwise_and(image_w, image_w, mask= maskRed) #binarizar las imagenes
+        cv2.imshow('frame', maskRedvis) #mostrar la imagen binarizada
         cv2.waitKey()
 
 
