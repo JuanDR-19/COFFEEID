@@ -1,72 +1,41 @@
 import cv2
 import numpy as np
 import os
-import colors
-from matplotlib import pyplot as plt
 
-
-def contorno(img):
-    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    blurred_img = cv2.GaussianBlur(gray_img, (5, 5), 0)
-    edges = cv2.Canny(blurred_img, 50, 150)
-    kernel = np.ones((5, 5), np.uint8)
-    dilated_edges = cv2.dilate(edges, kernel, iterations=1)
-    contours, _ = cv2.findContours(dilated_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(img, contours, -1, (0,0,255), 2)
-    cv2.imshow("Imagen con contornos", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    
-
-def sqdiff(img, template, h, w):
-    img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    res = cv2.matchTemplate(img_grey, template, cv2.TM_SQDIFF)
-    plt.imshow(res, cmap='gray')
-    plt.title('Resultado de la coincidencia')
-    plt.show()
-    identify(h,w,res,img_grey)
-    
-    
-
-def identify(h, w, res, img_grey):
-    # Señalar los granos seleccionados
-    min_v, max_v, min_loc, max_loc = cv2.minMaxLoc(res) #encontrar los valores mínimo y máximo y sus ubicaciones en la matriz res
-    # min_loc se utiliza para identificar la ubicación del punto donde se encontró la mejor coincidencia.
-    top_left = min_loc #top_left es la esquina superior izquierda del rectángulo que se utilizará para señalar la ubicación del grano de café identificado.
-    bottom_right = (top_left[0] + w, top_left[1] + h)
-    img_with_rectangle = img_grey.copy()
-    cv2.rectangle(img_with_rectangle, top_left, bottom_right, 255, 2)
-    cv2.imshow('Imagen con Rectángulo', img_with_rectangle)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-                    
 
 def main():
-    # Proyecto de visión artificial
-    print('Identificación de granos de café maduros')
-    color_white = (255, 255, 255)
-    template = cv2.imread('./knowledge/template.jpeg', cv2.IMREAD_GRAYSCALE)  # Cargar la plantilla como imagen en escala de grises
-    h, w = template.shape[:2]
+    print("Identificación de granos de café maduros")
+    print("Se hará uso de la metodología watershed para identificar los granos de café dentro del cafeto")
+    target_size = (750, 800)  # Tamaño deseado para las imágenes
+    # Directorio con las imágenes originales
     db = "./DB"
-    valid = ['.jpg', '.jpeg', '.png']
+    valid = [".jpg", ".jpeg", ".png"]
     img_list = []
-    grain = colors.grain()
-    
+    redBajo1 = np.array([0, 100, 20], np.uint8)
+    redAlto1 = np.array([8, 255, 255], np.uint8)
+    redBajo2 = np.array([175, 100, 20], np.uint8)
+    redAlto2 = np.array([179, 255, 255], np.uint8)
+
     if os.path.exists(db):
-        img_list = os.listdir(db)
-        
-        for ph in img_list:
-            print('analizando imagen')
-            if any(ph.endswith(extension) for extension in valid):
-                route = os.path.join(db, ph)
-                img = cv2.imread(route)
-                if img is not None:
-                    sqdiff(img,template,h,w)   
-                    
-    else:
-        print("El directorio de imágenes no existe.")
-        exit(1)
-    
-if __name__ == '__main__':
+        img_list = [
+            os.path.join(db, filename)
+            for filename in os.listdir(db)
+            if any(filename.lower().endswith(extension) for extension in valid)
+        ]
+
+    for img in img_list:
+        assert (img is not None), "El archivo de imagen no pudo ser leído, verificar que existe y que está guardado correctamente"
+        image_w = cv2.imread(img, cv2.IMREAD_COLOR)  # Leer la imagen en formato BGR (3 channels)
+        image_w = cv2.resize(image_w, target_size) # cambiar el tamaño de las imagnes para dar estandar
+        image_w = cv2.cvtColor(image_w, cv2.COLOR_BGR2HSV)  # cambiar el color a escala hsv
+        maskRed1 = cv2.inRange(image_w, redBajo1, redAlto1) # aplicar las mascaras
+        maskRed2 = cv2.inRange(image_w, redBajo2, redAlto2) # aplicar las segundas mascaras
+        maskRed = cv2.add(maskRed1, maskRed2) #combinar mascaras
+        maskRedvis = cv2.bitwise_and(image_w, image_w, mask= maskRed) #binarizar las imagenes
+        cv2.imshow('frame', maskRedvis) #mostrar la imagen binarizada
+        cv2.waitKey()
+
+
+if __name__ == "__main__":
     main()
+
