@@ -1,6 +1,7 @@
 import cv2
-import os
 import numpy as np
+import os
+
 
 def main():
     print("Identificación de granos de café maduros")
@@ -37,3 +38,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
