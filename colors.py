@@ -1,9 +1,10 @@
 class grain:
-    GREEN = (109, 143, 98)  # INMADURO
-    MUSTARD = (166, 163, 110)  # SEMI-INMADURO
-    PINT = (194, 152, 108)  # POR SER MADURO
-    M1 = (151, 75, 94)  # GRANO UTIL
-    M2 = (126, 79, 87)  # GRANO UTIL
-    SM1 = (109, 73, 85)  # SOBREMADURADO
-    SM2 = (83, 62, 70)  # SOBREMADURADO
-    DRY = (43, 38, 38)  # SECO
+    # DATOS EN HSV
+    GREEN = (105, 19, 56)  # INMADURO
+    MUSTARD = (57, 24, 65)  # SEMI-INMADURO
+    PINT = (31, 41, 76)  # POR SER MADURO
+    M1 = (345, 34, 59)  # GRANO UTIL
+    M2 = (350, 23, 49)  # GRANO UTIL
+    SM1 = (341, 19, 43)  # SOBREMADURADO
+    SM2 = (337, 14, 33)  # SOBREMADURADO
+    DRY = (0, 6, 17)  # SECO
